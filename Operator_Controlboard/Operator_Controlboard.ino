@@ -85,8 +85,8 @@ void loop() {
   XInput.setButton(BUTTON_BACK, backState);
 
 //Joysticks
-  //bool invertLeftY = !InvertLeftYAxis;
-  //bool invertRightY = !InvertRightYAxis;
+  bool invertLeftY = !InvertLeftYAxis;
+  bool invertRightY = !InvertRightYAxis;
 
 
   int readLJX = analogRead(leftJoyX);
@@ -97,7 +97,7 @@ void loop() {
   int readLJY = analogRead(leftJoyY);
   int movingAvgLJY = LJY.reading(readLJY);
   int averageLJY = LJY.getAvg();
-  XInput.setJoystickY(JOY_LEFT, averageLJY);
+  XInput.setJoystickY(JOY_LEFT, averageLJY, invertLeftY);
     
   int readRJX = analogRead(rightJoyX);
   int movingAvgRJX = RJX.reading(readRJX);
@@ -107,7 +107,7 @@ void loop() {
   int readRJY = analogRead(rightJoyY);
   int movingAvgRJY = RJY.reading(readRJY);
   int averageRJY = RJY.getAvg();
-  XInput.setJoystickY(JOY_RIGHT, averageRJY);
+  XInput.setJoystickY(JOY_RIGHT, averageRJY, invertRightY);
 
   int readTL = analogRead(leftTrigger);
   int movingAvgTL = TL.reading(readTL);

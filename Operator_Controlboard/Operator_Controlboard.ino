@@ -1,4 +1,5 @@
 #include <XInput.h>
+#include <movingAvg.h>          // https://github.com/JChristensen/movingAvg
 // To upload to the board:
 // Press the ‘Upload’ button in the IDE
 // Wait until the status bar says “Uploading…”
@@ -20,31 +21,11 @@ int rightJoyY = A3;
 int leftTrigger = A4;
 
 //smoothing
-const int numReadings = 10;
-int readingsLJX[numReadings];      // the readings from the analog input
-int readIndexLJX = 0;              // the index of the current reading
-int totalLJX = 0;                  // the running total
-int averageLJX = 0;                // the average
-
-int readingsLJY[numReadings];      // the readings from the analog input
-int readIndexLJY = 0;              // the index of the current reading
-int totalLJY = 0;                  // the running total
-int averageLJY = 0;                // the average
-
-int readingsRJX[numReadings];      // the readings from the analog input
-int readIndexRJX = 0;              // the index of the current reading
-int totalRJX = 0;                  // the running total
-int averageRJX = 0;                // the average
-
-int readingsRJY[numReadings];      // the readings from the analog input
-int readIndexRJY = 0;              // the index of the current reading
-int totalRJY = 0;                  // the running total
-int averageRJY = 0;                // the average
-
-int readingsTL[numReadings];      // the readings from the analog input
-int readIndexTL = 0;              // the index of the current reading
-int totalTL = 0;                  // the running total
-int averageTL = 0;                // the average
+movingAvg LJX(10);
+movingAvg LJY(10);
+movingAvg RJX(10);
+movingAvg RJY(10);
+movingAvg TL(10);
 
 //inverting Y axis
 bool InvertLeftYAxis = false;
@@ -67,26 +48,13 @@ void setup() {
   XInput.setJoystickRange(0, 1023);
 
   //smoothing
-  // initialize all the readings to 0:
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-    readingsLJX[thisReading] = 0;
-  }
-   
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-    readingsLJY[thisReading] = 0;
-  }
+
+  LJX.begin();
+  LJY.begin();
+  RJX.begin();
+  RJY.begin();
+  TL.begin();
   
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-    readingsRJX[thisReading] = 0;
-  }
-   
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-    readingsRJY[thisReading] = 0;
-  } 
-  
- for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-    readingsTL[thisReading] = 0;
-  }
 
   XInput.setAutoSend(false);
   XInput.begin();
@@ -117,91 +85,33 @@ void loop() {
   XInput.setButton(BUTTON_BACK, backState);
 
 //Joysticks
-  bool invertLeftY = !InvertLeftYAxis;
-  bool invertRightY = !InvertRightYAxis;
+  //bool invertLeftY = !InvertLeftYAxis;
+  //bool invertRightY = !InvertRightYAxis;
 
-  // subtract the last reading:
-  totalLJX = totalLJX - readingsLJX[readIndexLJX];
-  // read from the sensor:
-  readingsLJX[readIndexLJX] = analogRead(leftJoyX);
-  // add the reading to the total:
-  totalLJX = totalLJX + readingsLJX[readIndexLJX];
-  // advance to the next position in the array:
-  readIndexLJX = readIndexLJX + 1;
-  // if we're at the end of the array...
-  if (readIndexLJX >= numReadings) {
-    // ...wrap around to the beginning:
-    readIndexLJX = 0;
-  }
-  // calculate the average:
-  averageLJX = totalLJX / numReadings;
+
+  int readLJX = analogRead(leftJoyX);
+  int movingAvgLJX = LJX.reading(readLJX);
+  int averageLJX = LJX.getAvg();
   XInput.setJoystickX(JOY_LEFT, averageLJX);
 
-  // subtract the last reading:
-  totalLJY = totalLJY - readingsLJY[readIndexLJY];
-  // read from the sensor:
-  readingsLJY[readIndexLJY] = analogRead(leftJoyY);
-  // add the reading to the total:
-  totalLJY = totalLJY + readingsLJY[readIndexLJY];
-  // advance to the next position in the array:
-  readIndexLJY = readIndexLJY + 1;
-  // if we're at the end of the array...
-  if (readIndexLJY >= numReadings) {
-    // ...wrap around to the beginning:
-    readIndexLJY = 0;
-  }
-  // calculate the average:
-  averageLJY = totalLJY / numReadings;
-  XInput.setJoystickY(JOY_LEFT, averageLJY, invertLeftY);
-
-
-  totalRJY = totalRJX - readingsRJX[readIndexRJX];
-  // read from the sensor:
-  readingsRJY[readIndexRJX] = analogRead(rightJoyX);
-  // add the reading to the total:
-  totalRJX = totalRJX + readingsRJX[readIndexRJX];
-  // advance to the next position in the array:
-  readIndexRJX = readIndexRJX + 1;
-  // if we're at the end of the array...
-  if (readIndexRJX >= numReadings) {
-    // ...wrap around to the beginning:
-    readIndexRJX = 0;
-  }
-  // calculate the average:
-  averageRJX = totalRJX / numReadings;
+  int readLJY = analogRead(leftJoyY);
+  int movingAvgLJY = LJY.reading(readLJY);
+  int averageLJY = LJY.getAvg();
+  XInput.setJoystickY(JOY_LEFT, averageLJY);
+    
+  int readRJX = analogRead(rightJoyX);
+  int movingAvgRJX = RJX.reading(readRJX);
+  int averageRJX = RJX.getAvg();
   XInput.setJoystickX(JOY_RIGHT, averageRJX);
+  
+  int readRJY = analogRead(rightJoyY);
+  int movingAvgRJY = RJY.reading(readRJY);
+  int averageRJY = RJY.getAvg();
+  XInput.setJoystickY(JOY_RIGHT, averageRJY);
 
-  totalRJY = totalRJY - readingsRJY[readIndexRJY];
-  // read from the sensor:
-  readingsRJY[readIndexRJY] = analogRead(rightJoyY);
-  // add the reading to the total:
-  totalRJY = totalRJY + readingsRJY[readIndexRJY];
-  // advance to the next position in the array:
-  readIndexRJY = readIndexRJY + 1;
-  // if we're at the end of the array...
-  if (readIndexRJY >= numReadings) {
-    // ...wrap around to the beginning:
-    readIndexRJY = 0;
-  }
-  // calculate the average:
-  averageRJY = totalRJY / numReadings;
-  XInput.setJoystickY(JOY_RIGHT, averageRJY, invertRightY);
-
- //Trigger
-   totalTL = totalTL - readingsTL[readIndexTL];
-  // read from the sensor:
-  readingsTL[readIndexTL] = analogRead(leftTrigger);
-  // add the reading to the total:
-  totalTL = totalTL + readingsTL[readIndexTL];
-  // advance to the next position in the array:
-  readIndexTL = readIndexTL + 1;
-  // if we're at the end of the array...
-  if (readIndexTL >= numReadings) {
-    // ...wrap around to the beginning:
-    readIndexTL = 0;
-  }
-  // calculate the average:
-  averageTL = totalTL / numReadings;
+  int readTL = analogRead(leftTrigger);
+  int movingAvgTL = TL.reading(readTL);
+  int averageTL = TL.getAvg();
   XInput.setTrigger(TRIGGER_LEFT, averageTL);
 
   XInput.send();
